@@ -1,15 +1,18 @@
 import React, {useState,useEffect} from 'react';
-import { StyleSheet, Button, Text, View, ScrollView } from "react-native";
-import { List, IconButton, Colors, Title } from 'react-native-paper';
+import { StyleSheet, Text, View, ScrollView } from "react-native";
+import { List, IconButton, Colors, Title, Button } from 'react-native-paper';
 
 import FloatingButton from './FloatingButton';
-
+import { db } from './Db';
+import { string } from 'yargs';
 interface IPeople {
     _id?: number,
     name: string,
     lastName: string,
     description?: string
 }
+
+interface JsonResponse { _array?: IPeople[], length: number };
 
 const listPeoples: IPeople[] = [
     {
@@ -72,7 +75,27 @@ const listPeoples: IPeople[] = [
         name: 'Melina',
         lastName: 'Paez'
     }
-]  
+]
+
+const usePeoples = () => {
+    const initialState: IPeople[] = [];
+    const [peoples, setPeoples] = useState(initialState);
+    
+    useEffect(() => {
+        db.transaction(
+            (tx) => {
+                tx.executeSql("select * from peoples", [], (_, { rows }) => {
+                    const _listPeoples: IPeople[] | undefined = (rows as JsonResponse)._array;
+                    // console.log('Peoples:', rows, _listPeoples);
+                    if(_listPeoples)
+                        setPeoples([..._listPeoples]);
+                });
+            }
+        );
+    }, []);
+
+    return { peoples };   
+}
 
 const PeopleComponent = ({ title, description }: {title: string, description: string}) => (
     <List.Item
@@ -85,21 +108,41 @@ const PeopleComponent = ({ title, description }: {title: string, description: st
 )
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
-    const [peoples, setPeoples] = useState(listPeoples);
+    const initialState: IPeople[] = [];
+    const [peoples, setPeoples] = useState(initialState);
+    
+    useEffect(() => {
+        db.transaction(
+            (tx) => {
+                tx.executeSql("select * from peoples", [], (_, { rows }) => {
+                    const _listPeoples: IPeople[] | undefined = (rows as JsonResponse)._array;
+                    // console.log('Peoples:', rows, _listPeoples);
+                    if(_listPeoples)
+                        setPeoples([..._listPeoples]);
+                });
+            }
+        );
+    }, []);
 
-    const TaskSchema = {
-        name: "Task",
-        properties: {
-            _id: "int",
-            name: "string",
-            status: "string?",
-        },
-        primaryKey: "_id",
-    };
+    const getPeoples = () => 
+        db.transaction(
+            (tx) => {
+                tx.executeSql("select * from peoples", [], (_, { rows }) => {
+                    const _listPeoples: IPeople[] | undefined = (rows as JsonResponse)._array;
+                    // console.log('Peoples:', rows, _listPeoples);
+                    if(_listPeoples)
+                        setPeoples([..._listPeoples]);
+                });
+            }
+        );
+
     return (
         <View style={styles.container}>
             {/* <Title style={styles.title}>List of Peoples</Title> */}
             <ScrollView>
+                <Button mode="outlined" onPress={getPeoples} style={{ marginBottom: 10 }}>
+                    Reload
+                </Button>
                 {
                     peoples.map((people, i) => <PeopleComponent key={i} title={`${people.name} ${people.lastName}`} description={people.description || ''} />)
                 }

@@ -3,6 +3,7 @@ import { StyleSheet, Button, Text, View } from "react-native";
 import { TextInput } from 'react-native-paper';
 
 import FloatingButton from './FloatingButton';
+import { db } from './Db';
 
 export default function AddPeopleScreen({ navigation }: { navigation: any }) {
     const initialState= { name: '', lastName: '', description: ''}
@@ -13,10 +14,16 @@ export default function AddPeopleScreen({ navigation }: { navigation: any }) {
     }
 
     const handleSaveChanges = async () => {
-        // if(newPeople.name !== '' && newPeople.lastName !== '') {
-        //     const jsonValue = JSON.stringify({...newPeople})
-        //     await AsyncStorage.mergeItem('peoples', jsonValue);
-        // }
+        if(newPeople.name !== '' && newPeople.lastName !== '') {
+            db.transaction(
+                (tx) => {
+                    tx.executeSql("insert into peoples (name, lastName, description) values (?, ?, ?)", [newPeople.name, newPeople.lastName, newPeople.description]);
+                    tx.executeSql("select * from peoples", [], (_, { rows }) =>
+                        console.log('Peoples:', JSON.stringify(rows))
+                    );
+                }
+            );
+        }
 
         navigation.navigate('Home');
     }
