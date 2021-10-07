@@ -32,6 +32,7 @@ export default function AddPeopleScreen({ navigation }: { navigation: any }) {
         <View style={styles.container}>
             <View>
             <TextInput
+                autoFocus
                 style={styles.input}
                 label="Name"
                 value={newPeople.name}

@@ -1,6 +1,6 @@
 import React, {useState,useEffect} from 'react';
-import { StyleSheet, Text, View, ScrollView } from "react-native";
-import { List, IconButton, Colors, Title, Button } from 'react-native-paper';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Pressable, Alert } from "react-native";
+import { List, IconButton, Colors, Title, Button, Subheading, Caption } from 'react-native-paper';
 
 import FloatingButton from './FloatingButton';
 import { db } from './Db';
@@ -97,14 +97,22 @@ const usePeoples = () => {
     return { peoples };   
 }
 
+const AlertPress = (text: string) => Alert.alert(text);
+
 const PeopleComponent = ({ title, description }: {title: string, description: string}) => (
-    <List.Item
-        style={styles.itemList}
-        title={title}
-        description={description}
-        left={props => <List.Icon {...props} icon="face" />}
-        right={props => <List.Icon {...props} icon="delete"/>}
-    />
+    <TouchableOpacity
+        style={styles.item}
+        onPress={() => AlertPress(title)}
+    >
+        <View>
+            <Subheading >{title}</Subheading>
+            <Caption>{description}</Caption>
+        </View>
+        <IconButton 
+            icon="delete"
+            size={20}
+            onPress={() => AlertPress(`Eliminar Persona: ${title}`)}/>
+    </TouchableOpacity>
 )
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
@@ -163,11 +171,15 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 10
     },
-    itemList: {
+    item: {
         marginBottom: 5,
         backgroundColor: '#fff',
         borderColor: '#ccc',
         borderWidth: 1,
         borderRadius: 5,
+        padding: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
     }
 });
