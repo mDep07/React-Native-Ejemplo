@@ -1,12 +1,13 @@
 import React, {useState,useEffect} from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Pressable, Alert } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Pressable, Alert, GestureResponderEvent } from "react-native";
 import { List, IconButton, Colors, Title, Button, Subheading, Caption } from 'react-native-paper';
 
 import FloatingButton from './FloatingButton';
 import { db } from './Db';
 import { string } from 'yargs';
+import { SQLStatementCallback, SQLStatementErrorCallback } from 'expo-sqlite';
 interface IPeople {
-    _id?: number,
+    _id: number,
     name: string,
     lastName: string,
     description?: string
@@ -99,23 +100,28 @@ const usePeoples = () => {
 
 const AlertPress = (text: string) => Alert.alert(text);
 
-const PeopleComponent = ({ title, description }: {title: string, description: string}) => (
-    <TouchableOpacity
-        style={styles.item}
-        onPress={() => AlertPress(title)}
-    >
-        <View>
-            <Subheading >{title}</Subheading>
-            <Caption>{description}</Caption>
-        </View>
-        <IconButton 
-            icon="delete"
-            size={20}
-            onPress={() => AlertPress(`Eliminar Persona: ${title}`)}/>
-    </TouchableOpacity>
-)
+type ParamsPeopleComponent = { id: number, title: string, description: string, isLastItem: Boolean, handleDelete: Function, handleEdit: Function }
 
-export default function HomeScreen({ navigation }: { navigation: any }) {
+const PeopleComponent = ({ id, title, description, isLastItem, handleDelete, handleEdit } : ParamsPeopleComponent) => {
+    const lastItemStyle = isLastItem ? { marginBottom: 70, borderColor: 'red', } : {};
+    return (
+        <TouchableOpacity
+            style={{...styles.item, ...lastItemStyle}}
+            onPress={() => handleEdit(id)}
+        >
+            <View>
+                <Subheading >{title}</Subheading>
+                <Caption>{description}</Caption>
+            </View>
+            <IconButton 
+                icon="delete"
+                size={20}
+                onPress={() => handleDelete(id)}/>
+        </TouchableOpacity>
+    )
+}
+
+export default function HomeScreen({ route, navigation }: { route: any, navigation: any }) {
     const initialState: IPeople[] = [];
     const [peoples, setPeoples] = useState(initialState);
     
@@ -132,27 +138,59 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         );
     }, []);
 
-    const getPeoples = () => 
+    const newPeople: IPeople | undefined = route?.params?.newPeople;
+
+    useEffect(() => {
+        if(newPeople)
+            setPeoples([...peoples, newPeople]);
+    }, [newPeople]);
+
+    const deletePeople = (_id: number) => {
+
+        const successDelete: SQLStatementCallback = (tx, result)  => {
+            const peoplesFilter = peoples.filter(p => p._id !== _id); 
+            setPeoples([...peoplesFilter]);
+            AlertPress('PERSONA Eliminada Correctamente.');
+        };
+        const errorDelete: SQLStatementErrorCallback = (tx, result)  => {
+            AlertPress('PERSONA Eliminada Correctamente.');
+            return false;
+        };
+
         db.transaction(
             (tx) => {
-                tx.executeSql("select * from peoples", [], (_, { rows }) => {
-                    const _listPeoples: IPeople[] | undefined = (rows as JsonResponse)._array;
-                    // console.log('Peoples:', rows, _listPeoples);
-                    if(_listPeoples)
-                        setPeoples([..._listPeoples]);
-                });
-            }
+                tx.executeSql(
+                    "delete from peoples where _id = ?", 
+                    [_id],
+                    successDelete, 
+                    errorDelete
+                );
+            },
         );
+    }
+
+    const editPeople = (_id: number) => {
+        const editPeople = peoples.find(p => p._id === _id);
+        navigation.navigate('Home', { editPeople });
+    }
 
     return (
         <View style={styles.container}>
-            {/* <Title style={styles.title}>List of Peoples</Title> */}
             <ScrollView>
-                <Button mode="outlined" onPress={getPeoples} style={{ marginBottom: 10 }}>
-                    Reload
-                </Button>
                 {
-                    peoples.map((people, i) => <PeopleComponent key={i} title={`${people.name} ${people.lastName}`} description={people.description || ''} />)
+                    peoples.length > 0 
+                    ?   peoples.map((people, i) => 
+                            <PeopleComponent
+                                key={people._id} 
+                                id={people._id} 
+                                title={`${people.name} ${people.lastName}`} 
+                                description={people.description || ''} 
+                                isLastItem={(peoples.length - 1) === i}
+                                handleDelete={deletePeople}
+                                handleEdit={editPeople}
+                            />
+                        )
+                    :   null
                 }
             </ScrollView>
             <FloatingButton handlePress={() => navigation.navigate('AddPeople')} icon="plus" />
