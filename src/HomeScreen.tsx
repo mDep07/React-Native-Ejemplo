@@ -138,14 +138,22 @@ export default function HomeScreen({ route, navigation }: { route: any, navigati
         );
     }, []);
 
-    const newPeople: IPeople | undefined = route?.params?.newPeople;
-
+    const newPerson: IPeople | undefined = route?.params?.newPerson;
     useEffect(() => {
-        if(newPeople)
-            setPeoples([...peoples, newPeople]);
-    }, [newPeople]);
+        if(newPerson)
+            setPeoples([...peoples, newPerson]);
+    }, [newPerson]);
 
-    const deletePeople = (_id: number) => {
+    const editedPerson: IPeople | undefined = route?.params?.editPerson;
+    useEffect(() => {
+        if(editedPerson) {
+            const personEditedIndex = peoples.findIndex(p => p._id === editedPerson._id);
+            const peoplesFilter = [...peoples.slice(0, personEditedIndex), editedPerson, ...peoples.slice(personEditedIndex + 1, peoples.length)];
+            setPeoples([...peoplesFilter]);
+        }
+    }, [editedPerson]);
+
+    const deletePerson = (_id: number) => {
 
         const successDelete: SQLStatementCallback = (tx, result)  => {
             const peoplesFilter = peoples.filter(p => p._id !== _id); 
@@ -171,7 +179,7 @@ export default function HomeScreen({ route, navigation }: { route: any, navigati
 
     const editPeople = (_id: number) => {
         const editPeople = peoples.find(p => p._id === _id);
-        navigation.navigate('Home', { editPeople });
+        navigation.navigate('AddPeople', { editPeople });
     }
 
     return (
@@ -186,7 +194,7 @@ export default function HomeScreen({ route, navigation }: { route: any, navigati
                                 title={`${people.name} ${people.lastName}`} 
                                 description={people.description || ''} 
                                 isLastItem={(peoples.length - 1) === i}
-                                handleDelete={deletePeople}
+                                handleDelete={deletePerson}
                                 handleEdit={editPeople}
                             />
                         )
