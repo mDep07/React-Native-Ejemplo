@@ -1,11 +1,14 @@
 import React, {useState,useEffect} from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Pressable, Alert, GestureResponderEvent } from "react-native";
-import { List, IconButton, Colors, Title, Button, Subheading, Caption } from 'react-native-paper';
+import { List, IconButton, Colors, Title, Button, Subheading, Caption, Snackbar } from 'react-native-paper';
+import { useTheme } from 'react-native-paper';
 
 import FloatingButton from './FloatingButton';
 import { db } from './Db';
 import { string } from 'yargs';
 import { SQLStatementCallback, SQLStatementErrorCallback } from 'expo-sqlite';
+
+
 interface IPeople {
     _id: number,
     name: string,
@@ -78,30 +81,8 @@ const listPeoples: IPeople[] = [
     }
 ]
 
-const usePeoples = () => {
-    const initialState: IPeople[] = [];
-    const [peoples, setPeoples] = useState(initialState);
-    
-    useEffect(() => {
-        db.transaction(
-            (tx) => {
-                tx.executeSql("select * from peoples", [], (_, { rows }) => {
-                    const _listPeoples: IPeople[] | undefined = (rows as JsonResponse)._array;
-                    // console.log('Peoples:', rows, _listPeoples);
-                    if(_listPeoples)
-                        setPeoples([..._listPeoples]);
-                });
-            }
-        );
-    }, []);
-
-    return { peoples };   
-}
-
-const AlertPress = (text: string) => Alert.alert(text);
 
 type ParamsPeopleComponent = { id: number, title: string, description: string, isLastItem: Boolean, handleDelete: Function, handleEdit: Function }
-
 const PeopleComponent = ({ id, title, description, isLastItem, handleDelete, handleEdit } : ParamsPeopleComponent) => {
     const lastItemStyle = isLastItem ? { marginBottom: 70, borderColor: 'red', } : {};
     return (
@@ -122,8 +103,14 @@ const PeopleComponent = ({ id, title, description, isLastItem, handleDelete, han
 }
 
 export default function HomeScreen({ route, navigation }: { route: any, navigation: any }) {
+    const { colors } = useTheme();
+
     const initialState: IPeople[] = [];
     const [peoples, setPeoples] = useState(initialState);
+    const [snackBar, setSnackBar] = useState({ visible: false, text: '' });
+
+    const onDismissSnackBar = () => setSnackBar({ visible: false, text: '' });
+    const onOpenSnackBar = (text: string) => setSnackBar({ visible: true, text });
     
     useEffect(() => {
         db.transaction(
@@ -150,6 +137,7 @@ export default function HomeScreen({ route, navigation }: { route: any, navigati
             const personEditedIndex = peoples.findIndex(p => p._id === editedPerson._id);
             const peoplesFilter = [...peoples.slice(0, personEditedIndex), editedPerson, ...peoples.slice(personEditedIndex + 1, peoples.length)];
             setPeoples([...peoplesFilter]);
+            onOpenSnackBar('PERSONA Editada Correctamente.');
         }
     }, [editedPerson]);
 
@@ -158,10 +146,10 @@ export default function HomeScreen({ route, navigation }: { route: any, navigati
         const successDelete: SQLStatementCallback = (tx, result)  => {
             const peoplesFilter = peoples.filter(p => p._id !== _id); 
             setPeoples([...peoplesFilter]);
-            AlertPress('PERSONA Eliminada Correctamente.');
+            onOpenSnackBar('PERSONA Eliminada Correctamente.');
         };
         const errorDelete: SQLStatementErrorCallback = (tx, result)  => {
-            AlertPress('PERSONA Eliminada Correctamente.');
+            onOpenSnackBar('Ocurrio un Error al Eliminar a la PERSONA.');
             return false;
         };
 
@@ -201,6 +189,19 @@ export default function HomeScreen({ route, navigation }: { route: any, navigati
                     :   null
                 }
             </ScrollView>
+            <Snackbar
+                style={styles.snackBar}
+                visible={snackBar.visible}
+                onDismiss={onDismissSnackBar}
+                action={{
+                    label: 'Ok',
+                    onPress: () => {
+                        // Do something
+                    },
+                }}
+            >
+                {snackBar.text}
+            </Snackbar>
             <FloatingButton handlePress={() => navigation.navigate('AddPeople')} icon="plus" />
         </View>
     );
@@ -227,5 +228,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center'
+    },
+    snackBar: {
+        marginBottom: 80,
+        width: '100%',
+        maxWidth: 550,
     }
 });
