@@ -11,6 +11,18 @@ import AddPersonScreen from './AddPeopleScreen';
 
 import FloatingButton from './FloatingButton';
 
+const config = {
+    animation: 'spring',
+    config: {
+        stiffness: 1000,
+        damping: 500,
+        mass: 3,
+        overshootClamping: true,
+        restDisplacementThreshold: 0.01,
+        restSpeedThreshold: 0.01,
+    },
+};
+
 export default function App() {
     return (
         <NavigationContainer>
@@ -20,7 +32,7 @@ export default function App() {
                     component={HomeScreen}
                     options={{ title: 'Home' }}
                 />
-                <Stack.Screen name="AddPeople" component={AddPersonScreen} options={{ title: 'Add People' }} />
+                <Stack.Screen name="AddPeople" component={AddPersonScreen} options={{ title: 'Add People', animation: 'slide_from_right' }} />
             </Stack.Navigator>
         </NavigationContainer>
     );

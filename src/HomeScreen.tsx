@@ -84,7 +84,7 @@ const listPeoples: IPeople[] = [
 
 type ParamsPeopleComponent = { id: number, title: string, description: string, isLastItem: Boolean, handleDelete: Function, handleEdit: Function }
 const PeopleComponent = ({ id, title, description, isLastItem, handleDelete, handleEdit } : ParamsPeopleComponent) => {
-    const lastItemStyle = isLastItem ? { marginBottom: 70, borderColor: 'red', } : {};
+    const lastItemStyle = isLastItem ? { marginBottom: 70 } : {};
     return (
         <TouchableOpacity
             style={{...styles.item, ...lastItemStyle}}

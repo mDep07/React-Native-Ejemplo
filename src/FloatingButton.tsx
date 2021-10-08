@@ -3,10 +3,11 @@ import { StyleSheet } from "react-native";
 import { FAB } from "react-native-paper";
 
 
-const FloatingButton = ({ handlePress, icon }: { handlePress: () => void, icon: string }) => {
+const FloatingButton = ({ handlePress, icon, position = 0 }: { handlePress: () => void, icon: string, position?: number }) => {
+    const postionButton = !position ? {} : position === 2 ? { marginBottom: 80 } : {};
     return (
         <FAB
-            style={styles.fab}
+            style={{...styles.fab, ...postionButton}}
             icon={icon}
             onPress={handlePress}
         />
@@ -16,7 +17,8 @@ const FloatingButton = ({ handlePress, icon }: { handlePress: () => void, icon: 
 const styles = StyleSheet.create({
     fab: {
         position: "absolute",
-        margin: 16,
+        marginBottom: 16,
+        marginRight: 16,
         right: 0,
         bottom: 0,
     },

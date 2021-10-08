@@ -23,6 +23,11 @@ export default function AddPeopleScreen({ route, navigation }: { route: any, nav
         setPerson({...person, [name]: text})
     }
 
+    const handleCancel = () => {
+        setPerson(initialState);
+        goToHome();
+    }
+
     const handleSaveChanges = async () => {
         if(person.name !== '' && person.lastName !== '') {
             if(!isEditing) {
@@ -63,7 +68,6 @@ export default function AddPeopleScreen({ route, navigation }: { route: any, nav
             { isEditing && <Title>Editing Person</Title> }
             <View>
                 <TextInput
-                    autoFocus
                     style={styles.input}
                     label="Name"
                     value={person.name}
@@ -85,7 +89,8 @@ export default function AddPeopleScreen({ route, navigation }: { route: any, nav
                     onChangeText={text => handleChange(text, 'description')}
                 />
             </View>
-            <FloatingButton handlePress={handleSaveChanges} icon="check" />
+            <FloatingButton handlePress={handleSaveChanges} icon="check" position={2} />
+            <FloatingButton handlePress={handleSaveChanges} icon="close" />
         </View>
     );
 }
