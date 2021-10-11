@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Button, Text, View } from "react-native";
 import { TextInput, Title } from 'react-native-paper';
 
+import DropDown from "react-native-paper-dropdown";
+
 import FloatingButton from './FloatingButton';
 import { db } from './Db';
 
@@ -9,6 +11,8 @@ export default function AddPeopleScreen({ route, navigation }: { route: any, nav
     const initialState= route?.params?.editPeople || { _id: 0, name: '', lastName: '', description: ''};
     const [person, setPerson] = useState(initialState);
     const [isEditing, setIsEditing] = useState(false);
+    const [showDropDown, setShowDropDown] = useState(false);
+    const [gender, setGender] = useState('');
 
     useEffect(() => {
         console.log('Add o Editing People');
@@ -62,6 +66,21 @@ export default function AddPeopleScreen({ route, navigation }: { route: any, nav
         }
 
     }
+
+    const genderList = [
+        {
+            label: "Male",
+            value: "male",
+        },
+        {
+            label: "Female",
+            value: "female",
+        },
+        {
+            label: "Others",
+            value: "others",
+        },
+    ];
     
     return (
         <View style={styles.container}>
@@ -87,6 +106,17 @@ export default function AddPeopleScreen({ route, navigation }: { route: any, nav
                     value={person.description}
                     dense
                     onChangeText={text => handleChange(text, 'description')}
+                />
+                 <DropDown
+                    label={"Gender"}
+                    mode={"flat"}
+                    visible={showDropDown}
+                    showDropDown={() => setShowDropDown(true)}
+                    onDismiss={() => setShowDropDown(false)}
+                    value={gender}
+                    setValue={setGender}
+                    list={genderList}
+                    multiSelect
                 />
             </View>
             <FloatingButton handlePress={handleSaveChanges} icon="check" position={2} />
